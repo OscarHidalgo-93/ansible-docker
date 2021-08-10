@@ -1,0 +1,68 @@
+---
+- hosts: sns12
+  become: True
+  remote_user: viewadmin
+  become_method: sudo
+  become_user: root
+  vars:
+    ansible_become_password: "viewadmin"
+    app_key: app.pub
+    src_home: /home/viewadmin
+
+  tasks:
+    #    - name: Generate key
+    #  openssh_keypair:
+    #    path: app
+    - name: Create user
+      user:
+        name: app
+        home: /home/app
+        generate_ssh_key: no
+        # groups: ['docker']
+        groups:
+          - docker
+    - name: Assert .ssh directory
+      file:
+        dest: /home/app/.ssh
+        state: directory
+        owner: app
+        mode: '0700'
+    - name: Install public SSH key
+      copy:
+        src: app.pub
+        dest: /home/app/.ssh/app.pub
+        owner: app
+        mode: '0600'
+    - name: Install authorized key
+      authorized_key:
+        user: app
+        state: present
+        key: "{{ lookup('file', 'app.pub') }}"
+    - name: Create aplication directory
+      file:
+        dest: /home/app/hello-spring
+        state: directory
+        owner: app
+        group: app
+        mode: '0755'
+    - name: Isenstall docker-compo.yml
+      copy:
+        src: files/docker-compose.yml
+        dest: /home/app/hello-spring/docker-compose.yml
+        owner: app
+        group: app
+        mode: '0644' 
+    - name: Create .docker directory
+      file:
+        dest: /home/app/.docker
+        state: directory    
+        owner: app
+        group: app
+        mode: '0700'
+    - name: Install .docker/config.json
+      copy: 
+        src: /home/viewadmin/.docker/config.json
+        dest:  /home/app/.docker/config.json
+        owner: app
+        group: app
+        mode: '0600'     

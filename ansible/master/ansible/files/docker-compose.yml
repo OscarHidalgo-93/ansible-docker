@@ -1,0 +1,7 @@
+version: '3.0'
+services:
+  hello-spring-testing:
+    image: 10.250.12.3:5050/oscarh93/hello-srping:latest
+    build: .
+    ports:
+      - "8081:8080"
